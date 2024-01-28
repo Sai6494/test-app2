@@ -1,49 +1,40 @@
 pipeline {
-       
-  environment {
-    dockerimagename = "saikrishna6494/nodeapp"
-    dockerImage = ""
-  }
-
-  agent any
-
-  stages {
-
-    stage('Checkout Source') {
-      steps {
-        git url : 'https://github.com/Sai6494/test-app2.git', branch: 'main', credentialsId: 'gitaccess'
-      }
+    agent any
+    
+    environment {
+        dockerImage = ''
+        registry = 'saikrishna6494/nodeapp'
+        registryCredential = 'DockerHubLogin'
     }
-
-    stage('Build Docker image') {
-      steps{
-        script {
-          dockerImage = docker.build dockerimagename
+    
+    stages {
+        stage('Checkout') {  
+            steps {
+                git url: 'https://github.com/Sai6494/test-app2.git', branch: 'main', credentialsId: 'gitaccess'
+            }
         }
-      }
-    }
-
-    stage('Pushing Image') {
-      environment {
-               registryCredential = 'DockerHubLogin'
-           }
-      steps{
-        script {
-          docker.withRegistry( 'https://registry.hub.docker.com', registryCredential ) {
-            dockerImage.push("latest")
-          }
+        stage('Build Docker image') { 
+            steps {
+                script {
+                    dockerImage = docker.build registry
+                }
+            }
         }
-      }
-    }
-
-    stage('Deploying App to Kubernetes') {
-      steps {
-        script {
-          kubernetesDeploy(configs: "deploymentservice.yml", kubeconfigId: "k8scredentials")
+        stage('Upload Docker Image') {
+            steps {    
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                    dockerImage.push()
+                    }
+                }
+            }
         }
-      }
+        stage('Deploy app') { 
+            steps {
+                script {
+                    kubernetesDeploy(configs: "deploymentservice.yml", kubeconfigId: "k8scredentials")
+                }
+            }
+        }
     }
-
-  }
-
 }
