@@ -12,7 +12,7 @@ pipeline {
 
     stage('Checkout Source') {
       steps {
-        git url: 'https://github.com/Sai6494/test-app2.git', branch: 'main', credentialsId: 'gitaccess'
+        git url : 'https://github.com/Sai6494/test-app2.git', branch: 'main', credentialsId: 'gitaccess'
       }
     }
 
